@@ -1,0 +1,17 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Downloaded compiler and support files
+/msp430-gcc-9.3.1.11_win64/
+/msp430-gcc-support-files/
+/toolchain.zip
+/support.zip
+
+# Local GUI settings
+/ImGui_smoke_test.ini
+/MSP430F5529_GPIO_teaching_simulator.ini
+
+# Local reference copies
+/family_guide.pdf
+/family_guide.txt
