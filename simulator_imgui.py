@@ -12,6 +12,7 @@ import uuid
 
 from imgui_bundle import imgui, hello_imgui
 from msp430_cpu import CPU, UnsupportedInstruction
+from board_ui import draw_board, style_workbench
 
 ROOT = Path(__file__).resolve().parent
 EXAMPLE = '''#include <msp430.h>
@@ -208,6 +209,10 @@ class FirmwareModel(Model):
                 self.status = 'Load failed'
                 return
             self.memory = bytearray(14)
+            # A polling program can sample a switch in its very first batch.
+            self.update_inputs()
+            self.cpu.write8(0x200, self.memory[2])
+            self.cpu.write8(0x201, self.memory[6])
             self.stop_event.clear()
             self.status = 'Running experimental MSP430 instructions'
             self.worker = threading.Thread(target=self._execute, daemon=True)
@@ -283,36 +288,7 @@ class App:
             self.model.log = str(exc)
 
     def board(self):
-        imgui.text('MSP-EXP430F5529LP  (schematic)')
-        p = imgui.get_cursor_screen_pos()
-        x, y = p.x, p.y
-        draw = imgui.get_window_draw_list()
-        def col(r, g, b, a=255):
-            return imgui.get_color_u32(imgui.ImVec4(r/255, g/255, b/255, a/255))
-        draw.add_rect_filled((x, y), (x+320, y+350), col(155, 30, 42), 8)
-        draw.add_rect_filled((x+110, y+120), (x+210, y+200), col(35, 35, 35), 4)
-        draw.add_text((x+127, y+145), col(255, 255, 255), 'MSP430')
-        draw.add_text((x+130, y+165), col(255, 255, 255), 'F5529')
-        draw.add_rect_filled((x+115, y+30), (x+205, y+80), col(35, 35, 35), 3)
-        draw.add_text((x+128, y+45), col(255, 255, 255), 'DEBUGGER')
-        draw.add_rect_filled((x+30, y), (x+75, y+20), col(185, 185, 185))
-        for i in range(10):
-            for px in (18, 302):
-                draw.add_circle_filled((x+px, y+95+i*18), 4, col(230, 195, 120))
-        r = self.model.memory[:] if self.model.memory else bytes(14)
-        red = bool(r[0] & r[1] & 1)
-        green = bool(r[8] & r[9] & 128)
-        draw.add_circle_filled((x+125, y+305), 10, col(255, 30, 30) if red else col(70, 10, 10))
-        draw.add_circle_filled((x+195, y+305), 10, col(20, 255, 70) if green else col(10, 60, 20))
-        draw.add_text((x+105, y+322), col(255,255,255), 'P1.0')
-        draw.add_text((x+177, y+322), col(255,255,255), 'P4.7')
-        imgui.dummy((320, 355))
-        imgui.button('Hold S1 (P2.1)', (145, 30))
-        self.model.s1 = imgui.is_item_active()
-        imgui.same_line()
-        imgui.button('Hold S2 (P1.1)', (145, 30))
-        self.model.s2 = imgui.is_item_active()
-        imgui.text_disabled('Headers are decorative; GPIO selector below.')
+        draw_board(self.model)
 
     def render(self):
         self.model.tick()
@@ -322,19 +298,23 @@ class App:
         if imgui.button('Save As'):
             self.file_dialog(True)
         imgui.same_line()
-        if imgui.button('Run'):
+        imgui.push_style_color(imgui.Col_.button, (0.10, 0.39, 0.34, 1))
+        if imgui.button('Run firmware'):
             self.model.run(self.source)
+        imgui.pop_style_color()
         imgui.same_line()
+        imgui.begin_disabled(not self.model.building and self.model.cpu is None)
         if imgui.button('Stop'):
             self.model.stop()
+        imgui.end_disabled()
         imgui.same_line()
         imgui.text(self.model.status)
         imgui.text_colored((1.0, 0.65, 0.25, 1.0), 'Experimental MSP430 CPU subset: unsupported instructions stop execution.')
         imgui.separator()
         imgui.begin_child('editor', (imgui.get_content_region_avail().x * 0.56, 0), imgui.ChildFlags_.borders)
-        imgui.text('C source')
+        imgui.separator_text('Firmware editor')
         _, self.source = imgui.input_text_multiline('##source', self.source, (-1, -170), imgui.InputTextFlags_.allow_tab_input)
-        imgui.text('Compiler messages')
+        imgui.separator_text('Build output')
         imgui.begin_child('log', (0, 120), imgui.ChildFlags_.borders)
         imgui.text_unformatted(self.model.log or 'No messages')
         imgui.end_child()
@@ -342,6 +322,7 @@ class App:
         imgui.same_line()
         imgui.begin_child('hardware', (0, 0), imgui.ChildFlags_.borders)
         self.board()
+        imgui.separator_text('GPIO inspector')
         labels = [f'P{p}.{b}' for p, b in self.pins]
         _, self.pin = imgui.combo('GPIO input', self.pin, labels)
         for label, level in [('Low', 0), ('High', 1), ('Float', None)]:
@@ -380,6 +361,7 @@ def main():
     params.app_window_params.window_title = 'MSP430F5529 GPIO teaching simulator'
     params.app_window_params.window_geometry.size = (1200, 800)
     params.fps_idling.enable_idling = False
+    params.callbacks.setup_imgui_style = style_workbench
     params.callbacks.show_gui = app.render
     try:
         hello_imgui.run(params)

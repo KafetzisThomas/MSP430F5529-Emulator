@@ -2,7 +2,7 @@ import time
 import unittest
 
 from imgui_bundle import hello_imgui
-from simulator_imgui import App, Model, EXAMPLE
+from simulator_imgui import App, Model, FirmwareModel, ROOT, EXAMPLE
 
 
 class ModelTests(unittest.TestCase):
@@ -62,10 +62,36 @@ class ModelTests(unittest.TestCase):
         self.assertEqual(self.model.status, 'Build failed')
         self.assertIn('UNKNOWN_REGISTER', self.model.log)
 
+    def test_firmware_button_latches_red_led(self):
+        self.model = FirmwareModel()
+        m = self.model
+        m.run((ROOT / 'button_toggle.c').read_text())
+        self.wait_for(lambda: m.cpu is not None and m.memory[7] & 2)
+
+        def observe(pressed, expected):
+            m.s1 = pressed
+            # Allow for batched input sampling and firmware debounce.
+            start = m.cpu.cycles
+            self.wait_for(lambda: m.cpu.cycles - start >= 40000)
+            self.assertEqual(bool(m.memory[6] & 2), not pressed)
+            self.assertEqual(bool(m.memory[0] & m.memory[1] & 1), expected)
+
+        observe(False, False)
+        m.s2 = True
+        observe(False, False)  # P1.1 must not act like P2.1.
+        m.s2 = False
+        observe(True, True)
+        observe(True, True)
+        observe(False, True)
+        observe(True, False)
+        observe(False, False)
+
     def test_imgui_frame(self):
         app = App()
         params = hello_imgui.RunnerParams()
         params.app_window_params.window_title = 'ImGui smoke test'
+        from board_ui import style_workbench
+        params.callbacks.setup_imgui_style = style_workbench
         def render():
             app.render()
             params.app_shall_exit = True

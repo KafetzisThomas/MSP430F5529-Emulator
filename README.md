@@ -19,3 +19,7 @@ References: `../msp430f5529.pdf` (TI SLAS590P) and the device support headers an
 ### Emulator speed
 
 Firmware mode batches common MSP430 instructions in a native host interpreter. On first use it builds a local library from `cpu_batch.c` with host `gcc` (e.g. MinGW-w64 on Windows, matching Python's architecture) and caches it in `__pycache__`. This is separate from TI's cross-compiler. The status shows `native batches` when active or `Python fallback` if the native build or load fails. Single stepping, mapped-device accesses and unaccelerated instructions retain the Python reference behavior. This improves throughput, not hardware timing fidelity. Run `python benchmark_cpu.py` from the project root to compare unpaced execution and measure actual blink intervals using the firmware worker.
+
+### S1 button exercise
+
+In the GUI, open `button_toggle.c` and click **Run**. Press **S1 (P2.1)** on the board drawing: the red **P1.0** LED toggles and stays that way when released. Press again to turn it off. S2 (P1.1) is independent. The switches are momentary, active-low inputs; the example polls the pin with a pull-up and debounces both edges. It does not require GPIO interrupts.
