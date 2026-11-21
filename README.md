@@ -15,3 +15,7 @@ CPU execution runs independently of GUI frames and is paced using experimental c
 `simulator.py` remains the legacy Tkinter host-C simulator; unlike the new firmware mode, it compiles and runs native Windows code **without a sandbox**. Only run trusted code there. MSP430 firmware execution is experimental and is not a security boundary either; do not run untrusted source.
 
 References: `../msp430f5529.pdf` (TI SLAS590P) and the device support headers and linker files distributed with TI MSP430 GCC. The separate `../MSP430-Emulator` targets a different MCU and was not incorporated into this CPU implementation.
+
+### Emulator speed
+
+Firmware mode batches common MSP430 instructions in a native host interpreter. On first use it builds a local library from `cpu_batch.c` with host `gcc` (e.g. MinGW-w64 on Windows, matching Python's architecture) and caches it in `__pycache__`. This is separate from TI's cross-compiler. The status shows `native batches` when active or `Python fallback` if the native build or load fails. Single stepping, mapped-device accesses and unaccelerated instructions retain the Python reference behavior. This improves throughput, not hardware timing fidelity. Run `python benchmark_cpu.py` from the project root to compare unpaced execution and measure actual blink intervals using the firmware worker.

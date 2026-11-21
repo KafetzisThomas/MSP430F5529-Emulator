@@ -11,6 +11,8 @@ class Memory:
     def __init__(self):
         self.data = bytearray(self.SIZE)
         self._regions = []
+        # Native batches only touch low-memory pages with no mapped devices.
+        self.mapped_low_pages = bytearray(256)
 
     def map_region(self, start, end, peripheral):
         """Map an inclusive address range to a device with read/write methods.
@@ -23,6 +25,8 @@ class Memory:
         if any(start <= last and end >= first for first, last, _ in self._regions):
             raise ValueError('Overlapping peripheral address range')
         self._regions.append((start, end, peripheral))
+        for page in range(start >> 8, min((end >> 8) + 1, 256)):
+            self.mapped_low_pages[page] = 1
 
     def _device(self, address, width):
         if width not in (1, 2) or address < 0 or address + width > self.SIZE:

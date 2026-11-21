@@ -149,6 +149,60 @@ class CpuTests(unittest.TestCase):
         self.assertEqual(cpu.reg[9:11], [0x9123, 0xabcd])
         self.assertEqual(cpu.cycles, 4)
 
+    def test_delay_register_save_restore(self):
+        for push, pop, slot in ((0x141e, 0x161d, 4), (0x151e, 0x171d, 2)):
+            with self.subTest(push=hex(push)):
+                cpu = CPU(Path('test_firmware.elf').read_bytes())
+                cpu.reg[0:3] = [0x4400, 0x12500, 0x105]
+                cpu.reg[13:15] = [0xa1234, 0xbcdef]
+                cpu.write16(0x4400, push)
+                cpu.write16(0x4402, pop)
+                cpu.step()
+                sp = 0x12500 - 2 * slot
+                self.assertEqual(cpu.reg[1], sp)
+                self.assertEqual([cpu.read16(sp), cpu.read16(sp+slot)], [0x1234, 0xcdef])
+                if slot == 4:
+                    self.assertEqual([cpu.read16(sp+2), cpu.read16(sp+6)], [10, 11])
+                self.assertEqual(cpu.cycles, 2 + slot)
+                cpu.reg[13:15] = [0, 0]
+                cpu.step()
+                self.assertEqual(cpu.reg[13:15], [0xa1234, 0xbcdef] if slot == 4 else [0x1234, 0xcdef])
+                self.assertEqual(cpu.reg[:3], [0x4404, 0x12500, 0x105])
+                self.assertEqual(cpu.cycles, 2 * (2 + slot))
+
+    def test_two_led_delay_intrinsic_at_one_mhz(self):
+        model = FirmwareModel()
+        model.clock_hz = 1_000_000
+        try:
+            model.run('''#include <msp430.h>
+                void main(void) {
+                    WDTCTL = WDTPW | WDTHOLD;
+                    P1DIR |= 1; P4DIR |= 128; volatile unsigned int i;
+                    P1OUT &= ~1; P4OUT &= ~128;
+                    for (;;) {
+                        P1OUT ^= 1; __delay_cycles(250000); P1OUT ^= 1;
+                        P4OUT ^= 128; __delay_cycles(250000); P4OUT ^= 128;
+                    }
+                }''')
+            # Use the real compiler flags and ELF, then advance in simulated
+            # time. No dependency on host scheduling for the timing assertions.
+            self.assertIsNotNone(model.process, model.log)
+            self.assertEqual(model.process.wait(timeout=20), 0)
+            cpu = CPU((Path(model.temp.name) / 'program.elf').read_bytes())
+            from cpu_batch import BatchRunner
+            runner = BatchRunner(cpu)
+            edges = []
+            while cpu.cycles < 800000 and len(edges) < 4:
+                runner.run(64)
+                state = (cpu.read8(0x202) & 1, cpu.read8(0x223) >> 7)
+                if state in ((1, 0), (0, 1)) and (not edges or state != edges[-1][0]):
+                    edges.append((state, cpu.cycles))
+            self.assertEqual([state for state, _ in edges], [(1, 0), (0, 1)] * 2)
+            for (_, start), (_, end) in zip(edges, edges[1:]):
+                self.assertAlmostEqual(end - start, 250000, delta=300)
+        finally:
+            model.stop()
+
     def test_push_register_byte_preserves_stack_high_byte(self):
         cpu = CPU(Path('test_firmware.elf').read_bytes())
         cpu.reg[0], cpu.reg[1], cpu.reg[4] = 0x4400, 0x2402, 0x1234

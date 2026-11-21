@@ -64,17 +64,33 @@ class CPU:
                 self.reg[0] = (self.reg[0] + 2 * delta) & 0xffff
             self.cycles += 2
             return
-        # CPUX PUSHM.W: GCC uses this to save registers on function entry.
-        if op & 0xff00 == 0x1500:
+        # CPUX PUSHM/POPM (TI SLAU208Q). POP encodes the lowest register,
+        # unlike PUSH, which encodes the highest. .A uses two words per slot.
+        if op & 0xfc00 == 0x1400:
             count = ((op >> 4) & 15) + 1
-            highest = op & 15
-            lowest = highest - count + 1
-            if lowest < 4:  # Special registers are outside the modeled subset.
+            pop = bool(op & 0x0200)
+            wide = not (op & 0x0100)
+            lowest = (op & 15) if pop else (op & 15) + 1 - count
+            highest = lowest + count - 1
+            if lowest < 4 or highest > 15:  # General registers only.
                 raise UnsupportedInstruction(f'Unsupported instruction 0x{op:04x} at 0x{pc:04x}')
-            for reg in range(highest, lowest - 1, -1):
-                self.reg[1] = (self.reg[1] - 2) & 0xffff
-                self.write16(self.reg[1], self.reg[reg] & 0xffff)
-            self.cycles += 2 + count
+            size = 4 if wide else 2
+            if pop:
+                for reg in range(lowest, highest + 1):
+                    sp = self.reg[1]
+                    value = self.read16(sp)
+                    if wide:
+                        value |= (self.read16((sp + 2) & 0xfffff) & 15) << 16
+                    self.reg[reg] = value
+                    self.reg[1] = (sp + size) & 0xfffff
+            else:
+                for reg in range(highest, lowest - 1, -1):
+                    sp = (self.reg[1] - size) & 0xfffff
+                    if wide:
+                        self.write16((sp + 2) & 0xfffff, (self.reg[reg] >> 16) & 15)
+                    self.write16(sp, self.reg[reg] & 0xffff)
+                    self.reg[1] = sp
+            self.cycles += 2 + count * (size // 2)
             return
         # Format II: general registers and selected memory addressing modes.
         operation = op & 0xff80

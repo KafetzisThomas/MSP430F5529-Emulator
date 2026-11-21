@@ -215,14 +215,16 @@ class FirmwareModel(Model):
 
     def _execute(self):
         # Nominal settled MCLK; instruction and clock support remain incomplete.
+        from cpu_batch import BatchRunner
+        runner = BatchRunner(self.cpu)
+        self.status = 'Running MSP430 firmware (' + ('native batches)' if runner.native else 'Python fallback)')
         batch = 1000
         self.behind = False
         deadline = time.monotonic()
         try:
             while not self.stop_event.is_set():
                 start_cycles = self.cpu.cycles
-                for _ in range(batch):
-                    self.cpu.step()
+                runner.run(batch)
                 for offset, addresses in ((0, (0x204, 0x202, 0x200, 0x206)),
                                           (4, (0x205, 0x203, 0x201, 0x207)),
                                           (8, (0x225, 0x223, 0x221, 0x227))):
