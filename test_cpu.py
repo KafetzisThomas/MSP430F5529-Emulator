@@ -137,6 +137,18 @@ class CpuTests(unittest.TestCase):
                 self.assertEqual(cpu.reg[2] & 0x107, expected_flags)
                 self.assertEqual(cpu.cycles - before, 1)
 
+    def test_pushm_word_blink_prologue(self):
+        cpu = CPU(Path('test_firmware.elf').read_bytes())
+        cpu.reg[0], cpu.reg[1], cpu.reg[2] = 0x440a, 0x2500, 0x105
+        cpu.reg[9], cpu.reg[10] = 0x9123, 0xabcd
+        cpu.write16(0x440a, 0x151a)  # PUSHM.W #2, R10
+        cpu.step()
+        self.assertEqual(cpu.reg[:3], [0x440c, 0x24fc, 0x105])
+        self.assertEqual(cpu.read16(0x24fe), 0xabcd)
+        self.assertEqual(cpu.read16(0x24fc), 0x9123)
+        self.assertEqual(cpu.reg[9:11], [0x9123, 0xabcd])
+        self.assertEqual(cpu.cycles, 4)
+
     def test_push_register_byte_preserves_stack_high_byte(self):
         cpu = CPU(Path('test_firmware.elf').read_bytes())
         cpu.reg[0], cpu.reg[1], cpu.reg[4] = 0x4400, 0x2402, 0x1234

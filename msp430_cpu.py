@@ -64,6 +64,18 @@ class CPU:
                 self.reg[0] = (self.reg[0] + 2 * delta) & 0xffff
             self.cycles += 2
             return
+        # CPUX PUSHM.W: GCC uses this to save registers on function entry.
+        if op & 0xff00 == 0x1500:
+            count = ((op >> 4) & 15) + 1
+            highest = op & 15
+            lowest = highest - count + 1
+            if lowest < 4:  # Special registers are outside the modeled subset.
+                raise UnsupportedInstruction(f'Unsupported instruction 0x{op:04x} at 0x{pc:04x}')
+            for reg in range(highest, lowest - 1, -1):
+                self.reg[1] = (self.reg[1] - 2) & 0xffff
+                self.write16(self.reg[1], self.reg[reg] & 0xffff)
+            self.cycles += 2 + count
+            return
         # Format II: general registers and selected memory addressing modes.
         operation = op & 0xff80
         if operation in (0x1000, 0x1080, 0x1100, 0x1180, 0x1200):
