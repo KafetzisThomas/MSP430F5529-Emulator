@@ -3,13 +3,13 @@ import unittest
 from pathlib import Path
 from cpu_batch import BatchRunner, backend
 from msp430_cpu import CPU
-from test_memory import RecordingPeripheral
+from tests.test_memory import RecordingPeripheral
 
 
 @unittest.skipUnless(backend(), 'native host compiler/backend unavailable')
 class BatchTests(unittest.TestCase):
     def setUp(self):
-        elf = Path('test_firmware.elf').read_bytes()
+        elf = (Path(__file__).parent / 'fixtures' / 'test_firmware.elf').read_bytes()
         self.ref, self.fast = CPU(elf), CPU(elf)
         self.runner = BatchRunner(self.fast)
 

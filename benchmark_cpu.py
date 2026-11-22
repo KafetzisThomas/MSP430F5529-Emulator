@@ -7,7 +7,7 @@ from simulator_imgui import FirmwareModel
 
 
 def main():
-    elf = Path('test_firmware.elf').read_bytes()
+    elf = (Path(__file__).resolve().parent / 'tests' / 'fixtures' / 'test_firmware.elf').read_bytes()
     results = []
     for fast in (False, True):
         cpu = CPU(elf)
@@ -28,7 +28,7 @@ def main():
 
     model = FirmwareModel()
     try:
-        model.run(Path('blink_2hz.c').read_text())
+        model.run((Path(__file__).resolve().parent / 'examples' / 'blink_2hz.c').read_text())
         deadline = time.monotonic() + 10
         edges = []
         previous = None

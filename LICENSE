@@ -1,0 +1,31 @@
+MSP430 Simulator Noncommercial Source-Available License
+
+This license applies to the MSP430 Simulator project files distributed with it, to the extent the respective copyright holders have authority to license those files under these terms. It does not replace separate licenses applicable to third-party components.
+
+1. Permission
+
+Subject to the conditions below, each copyright holder granting this license permits you to use, copy, study, modify, and redistribute the covered material and modified versions for noncommercial purposes.
+
+2. Noncommercial use
+
+A noncommercial purpose is one not primarily intended for or directed toward commercial advantage or monetary compensation. Commercial use, copying, modification, or redistribution requires prior permission from the relevant copyright holder or holders under separate terms. If you are unsure whether a use is commercial, obtain permission before proceeding.
+
+3. Redistribution
+
+When redistributing covered material, provide recipients with a copy of this license and retain existing copyright, attribution, and license notices.
+
+When redistributing a modified version, you must also provide each recipient, at no additional charge, the complete corresponding source code for that modified version, including your changes, in the preferred form for making modifications. Provide it along with the modified version or by a readily accessible download identified to the recipient at the time of distribution. Identify that you made changes. You must make the covered material and your changes available to recipients under this license, without adding restrictions that prevent their exercise of its permissions.
+
+You do not have to publish or distribute your private modifications merely because you made or used them. This license does not require you to publish source code to the general public when you distribute a modified version only to particular recipients.
+
+4. Third-party material and additional rights
+
+Third-party software, tools, libraries, and other material may be subject to their own licenses. You are responsible for complying with those terms. This license grants no rights to third-party material that its copyright holder has not authorized under this license. No trademark rights or rights to use a contributor's name for endorsement are granted.
+
+5. Termination
+
+Your permissions under this license terminate if you violate its conditions. The relevant copyright holder may separately reinstate permission. Termination of your permissions does not terminate permissions granted to recipients who remain in compliance.
+
+6. Disclaimer
+
+THE COVERED MATERIAL IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE COPYRIGHT HOLDERS AND CONTRIBUTORS ARE NOT LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM OR RELATED TO THE COVERED MATERIAL OR ITS USE.

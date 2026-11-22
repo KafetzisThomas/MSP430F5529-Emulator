@@ -43,7 +43,7 @@ class MemoryTests(unittest.TestCase):
             memory.read(0x1ff, 2)
 
     def test_cpu_instruction_uses_mapped_register(self):
-        cpu = CPU(Path('test_firmware.elf').read_bytes())
+        cpu = CPU((Path(__file__).parent / 'fixtures' / 'test_firmware.elf').read_bytes())
         device = RecordingPeripheral()
         cpu.memory.map_region(0x200, 0x201, device)
         cpu.reg[0], cpu.reg[4] = 0x4400, 0xabcd

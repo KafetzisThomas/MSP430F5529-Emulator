@@ -6,7 +6,7 @@ from msp430_cpu import CPU
 
 class MultiplierTests(unittest.TestCase):
     def setUp(self):
-        self.cpu = CPU(Path('test_firmware.elf').read_bytes())
+        self.cpu = CPU((Path(__file__).parent / 'fixtures' / 'test_firmware.elf').read_bytes())
 
     def test_unsigned_product_and_repeated_operand(self):
         cpu = self.cpu

@@ -65,7 +65,7 @@ class ModelTests(unittest.TestCase):
     def test_firmware_button_latches_red_led(self):
         self.model = FirmwareModel()
         m = self.model
-        m.run((ROOT / 'button_toggle.c').read_text())
+        m.run((ROOT / 'examples' / 'button_toggle.c').read_text())
         self.wait_for(lambda: m.cpu is not None and m.memory[7] & 2)
 
         def observe(pressed, expected):

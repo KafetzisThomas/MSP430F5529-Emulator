@@ -7,7 +7,7 @@ import time
 
 class CpuTests(unittest.TestCase):
     def test_real_compiled_blink(self):
-        cpu = CPU(Path('test_firmware.elf').read_bytes())
+        cpu = CPU((Path(__file__).parent / 'fixtures' / 'test_firmware.elf').read_bytes())
         saw_on = False
         saw_off_after_on = False
         for _ in range(160000):
@@ -21,7 +21,7 @@ class CpuTests(unittest.TestCase):
         self.assertTrue(saw_on and saw_off_after_on)
 
     def test_cycle_counts_for_blink_instructions(self):
-        cpu = CPU(Path('test_firmware.elf').read_bytes())
+        cpu = CPU((Path(__file__).parent / 'fixtures' / 'test_firmware.elf').read_bytes())
         expected = [(0x4400, 2), (0x4404, 1), (0x4406, 4),
                     (0x440a, 1), (0x440c, 4), (0x4412, 3),
                     (0x4416, 1), (0x4418, 2), (0x441c, 3),
@@ -36,7 +36,7 @@ class CpuTests(unittest.TestCase):
             self.assertEqual(cpu.cycles - previous, cycles, hex(pc))
 
     def test_blink_transition_cycle_count(self):
-        cpu = CPU(Path('test_firmware.elf').read_bytes())
+        cpu = CPU((Path(__file__).parent / 'fixtures' / 'test_firmware.elf').read_bytes())
         start = None
         for _ in range(200000):
             old = cpu.mem[0x202] & 1
@@ -99,7 +99,7 @@ class CpuTests(unittest.TestCase):
             model.stop()
 
     def test_extended_classic_double_operand_instructions(self):
-        cpu = CPU(Path('test_firmware.elf').read_bytes())
+        cpu = CPU((Path(__file__).parent / 'fixtures' / 'test_firmware.elf').read_bytes())
         # Register-direct R4 -> R5, word and byte variants.
         cases = [
             (0x6405, 0xffff, 0, 1, 0, 0x003),  # ADDC: carry and zero
@@ -118,7 +118,7 @@ class CpuTests(unittest.TestCase):
                 self.assertEqual(cpu.reg[2] & 0x107, flags)
 
     def test_single_operand_register_operations(self):
-        cpu = CPU(Path('test_firmware.elf').read_bytes())
+        cpu = CPU((Path(__file__).parent / 'fixtures' / 'test_firmware.elf').read_bytes())
         cases = [
             (0x1004, 0x0001, 0x101, 0x8000, 0x005),
             (0x1044, 0x0002, 0, 0x0001, 0),
@@ -138,7 +138,7 @@ class CpuTests(unittest.TestCase):
                 self.assertEqual(cpu.cycles - before, 1)
 
     def test_pushm_word_blink_prologue(self):
-        cpu = CPU(Path('test_firmware.elf').read_bytes())
+        cpu = CPU((Path(__file__).parent / 'fixtures' / 'test_firmware.elf').read_bytes())
         cpu.reg[0], cpu.reg[1], cpu.reg[2] = 0x440a, 0x2500, 0x105
         cpu.reg[9], cpu.reg[10] = 0x9123, 0xabcd
         cpu.write16(0x440a, 0x151a)  # PUSHM.W #2, R10
@@ -152,7 +152,7 @@ class CpuTests(unittest.TestCase):
     def test_delay_register_save_restore(self):
         for push, pop, slot in ((0x141e, 0x161d, 4), (0x151e, 0x171d, 2)):
             with self.subTest(push=hex(push)):
-                cpu = CPU(Path('test_firmware.elf').read_bytes())
+                cpu = CPU((Path(__file__).parent / 'fixtures' / 'test_firmware.elf').read_bytes())
                 cpu.reg[0:3] = [0x4400, 0x12500, 0x105]
                 cpu.reg[13:15] = [0xa1234, 0xbcdef]
                 cpu.write16(0x4400, push)
@@ -204,7 +204,7 @@ class CpuTests(unittest.TestCase):
             model.stop()
 
     def test_push_register_byte_preserves_stack_high_byte(self):
-        cpu = CPU(Path('test_firmware.elf').read_bytes())
+        cpu = CPU((Path(__file__).parent / 'fixtures' / 'test_firmware.elf').read_bytes())
         cpu.reg[0], cpu.reg[1], cpu.reg[4] = 0x4400, 0x2402, 0x1234
         cpu.write16(0x2400, 0xabcd)
         cpu.write16(0x4400, 0x1244)  # PUSH.B R4
@@ -214,7 +214,7 @@ class CpuTests(unittest.TestCase):
         self.assertEqual(cpu.cycles, 3)
 
     def test_single_operand_memory_and_call_register(self):
-        cpu = CPU(Path('test_firmware.elf').read_bytes())
+        cpu = CPU((Path(__file__).parent / 'fixtures' / 'test_firmware.elf').read_bytes())
         cpu.reg[0], cpu.reg[4], cpu.reg[2] = 0x4400, 0x2400, 1
         cpu.write16(0x2400, 0x0001)
         cpu.write16(0x4400, 0x1024)  # RRC @R4
@@ -236,7 +236,7 @@ class CpuTests(unittest.TestCase):
         self.assertEqual(cpu.cycles, 11)
 
     def test_decimal_add(self):
-        cpu = CPU(Path('test_firmware.elf').read_bytes())
+        cpu = CPU((Path(__file__).parent / 'fixtures' / 'test_firmware.elf').read_bytes())
         cases = [
             (0xa405, 0x0001, 0x9999, 0, 0x0000, 0x003),
             (0xa405, 0x1234, 0x4321, 1, 0x5556, 0x000),
@@ -253,7 +253,7 @@ class CpuTests(unittest.TestCase):
                 self.assertEqual(cpu.reg[2] & 0x100, 0x100)
 
     def test_bit_memory_does_not_write_and_uses_read_timing(self):
-        cpu = CPU(Path('test_firmware.elf').read_bytes())
+        cpu = CPU((Path(__file__).parent / 'fixtures' / 'test_firmware.elf').read_bytes())
         cpu.reg[0], cpu.reg[4] = 0x4400, 1
         cpu.write16(0x4400, 0xb482)  # BIT R4, &0x2400
         cpu.write16(0x4402, 0x2400)
@@ -264,7 +264,7 @@ class CpuTests(unittest.TestCase):
         self.assertEqual(cpu.cycles, 3)
 
     def test_unsupported_raises(self):
-        cpu = CPU(Path('test_firmware.elf').read_bytes())
+        cpu = CPU((Path(__file__).parent / 'fixtures' / 'test_firmware.elf').read_bytes())
         cpu.mem[0x4400:0x4402] = b'\x00\x00'
         with self.assertRaises(UnsupportedInstruction):
             cpu.step()
