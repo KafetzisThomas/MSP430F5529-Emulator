@@ -15,3 +15,5 @@ __pycache__/
 # Local reference copies
 /family_guide.pdf
 /family_guide.txt
+
+*.pdf
