@@ -2,6 +2,10 @@
 
 This is a proposed fixed set of firmware scenarios, not a claim of current 80% coverage. A scenario passes only after its behavior is implemented and tested against documented device behavior. Current automated tests do not yet prove hardware equivalence.
 
+![Scenario status: four partial, seventeen unsupported, zero passing, out of 21.](docs/images/feature-status.svg)
+
+The chart counts the rows below, not code or test coverage. Partial scenarios do not count as passing.
+
 | Scenario | Status |
 | --- | --- |
 | Compiled GPIO LED blink | Partial: tested with approximate GPIO and timing |

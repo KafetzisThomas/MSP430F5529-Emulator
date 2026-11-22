@@ -1,92 +1,107 @@
-# MSP430F5529 GPIO teaching simulator
+<div align="center">
 
-A Windows desktop teaching simulator for exploring simple MSP430F5529 C firmware, GPIO, LEDs, and buttons. It compiles firmware with TI's MSP430 GCC and runs it on an **experimental, incomplete CPU emulator**; it is not a substitute for testing on hardware.
+![MSP430F5529 Emulator — experimental firmware and GPIO teaching workbench for Windows](docs/images/header.svg)
+
+**Write firmware. Explore GPIO. Learn by experimenting.**
+
+[![Platform: Windows](https://img.shields.io/badge/platform-Windows-0078D4)](#quick-start-windows)
+[![Firmware: experimental](https://img.shields.io/badge/firmware-experimental-E6AD4D)](FEATURE_COVERAGE.md)
+[![License: noncommercial](https://img.shields.io/badge/license-noncommercial-9B59B6)](LICENSE)
+
+[Quick start](#quick-start-windows) · [Features](#what-you-can-explore) · [Coverage](#feature-status) · [Architecture](docs/ARCHITECTURE.md) · [Contributing](CONTRIBUTING.md)
+
+</div>
+
+A Windows desktop workbench for exploring simple MSP430F5529 C firmware, GPIO, LEDs, and buttons. It compiles firmware with TI's MSP430 GCC and executes it on an **experimental, incomplete CPU emulator**. It is a teaching tool, not a substitute for testing on hardware.
+
+![Simulator workbench showing a C firmware editor, build output, and illustrated MSP430F5529 LaunchPad.](docs/images/workbench.png)
+
+*The workbench at startup with the built-in blink example. The board illustration is schematic.*
+
+## How it works
+
+1. **Write or open C firmware** in the built-in editor.
+2. **Compile and run** it with the MSP430 cross-compiler and experimental CPU emulator.
+3. **Interact with the board** using the illustrated buttons and observe the LEDs.
+4. **Inspect GPIO** or override input levels while exploring program behavior.
+
+> **Safety:** Run only trusted source. Firmware execution is not a security boundary. The separate legacy Tkinter simulator compiles and executes native host code without a sandbox.
 
 ## What you can explore
 
-- Edit C in a Dear ImGui window, compile it, and inspect approximate P1, P2, and P4 GPIO state on a schematic board.
-- Exercise active-low S1 (P2.1) and S2 (P1.1), and set input overrides for other pins.
-- Execute a subset of MSP430 instructions, with optional native batching and a Python fallback. A partial unsigned 16-bit multiplier is mapped.
-- Use the legacy Tkinter host-C simulator separately; it is not the firmware emulator.
+| Workbench | Current behavior |
+| --- | --- |
+| Firmware editor | Edit C, open or save files, and inspect build output. |
+| Board and GPIO | Approximate P1, P2, and P4 state; active-low S1 (P2.1) and S2 (P1.1); input overrides. |
+| CPU execution | A limited MSP430 instruction subset, with optional native instruction batching and a Python fallback. |
+| Multiplier | Partial, immediate unsigned 16-bit word multiplication. |
+| Examples | Built-in blink, [alternating LEDs](examples/blink_2hz.c), and [button toggle](examples/button_toggle.c). |
 
-See [feature coverage](FEATURE_COVERAGE.md) for the acceptance baseline and unsupported scenarios. **Only run trusted source:** firmware execution is not a security boundary, and the legacy simulator executes compiled native code without a sandbox.
+Try the button exercise: open `examples/button_toggle.c`, click **Run firmware**, then press S1 to toggle the red P1.0 LED. This example polls the input; it is not an interrupt demonstration.
 
 ## Quick start (Windows)
 
-The commands below use **Command Prompt** from the project root. Windows is the environment exercised by this project; other platforms are not established. You need Python with Tkinter, `pip`, and access to a graphical desktop. The current environment ran the tests with Python 3.14.2 and `imgui-bundle` 1.93.0; other Python versions have not been verified here.
+You need Python with Tkinter and pip, a graphical desktop, and TI's Windows MSP430 GCC toolchain and device support files. The compiler and support files are **not included** in a fresh checkout. Windows with Python 3.14.2 and `imgui-bundle` 1.93.0 is the environment exercised here.
 
-1. Install the Python dependency:
+1. Install the Python dependency from the repository root:
 
    ```cmd
    python -m pip install -r requirements.txt
    ```
 
-2. Obtain TI's Windows MSP430 GCC toolchain and MSP430 GCC support files separately. They are not included in a fresh checkout. The code expects these exact paths:
-
-   ```text
-   %LOCALAPPDATA%\MSP430SimToolchain\bin\msp430-elf-gcc.exe
-   %LOCALAPPDATA%\MSP430SimSupport\include\msp430f5529.h
-   ```
-
-   The support `include` directory must also contain the appropriate device linker files. The original local setup uses the `msp430-gcc-9.3.1.11_win64` and `msp430-gcc-support-files` directories and directory junctions to avoid toolchain installation paths containing spaces. If those directories are placed at the project root and the two destinations above **do not already exist**, create the junctions from Command Prompt:
-
-   ```cmd
-   mklink /J "%LOCALAPPDATA%\MSP430SimToolchain" "%CD%\msp430-gcc-9.3.1.11_win64"
-   mklink /J "%LOCALAPPDATA%\MSP430SimSupport" "%CD%\msp430-gcc-support-files"
-   ```
-
-   Adjust the targets to the actual extracted directories if necessary. Do not overwrite existing paths; inspect them first. Moving a target or changing Windows accounts requires updating the corresponding setup.
-
-3. Launch the application:
+2. Configure the separately obtained toolchain and support files at the paths described in the **[Windows setup guide](docs/SETUP.md)**. This step is required before running firmware.
+3. Start the workbench:
 
    ```cmd
    python simulator_imgui.py
    ```
 
-   Alternatively, double-click `run.bat`. The editor opens with a built-in blink example. Click **Run firmware**; a successful build changes the status to running and the P1.0 LED should blink. Build and execution errors appear in **Build output**.
+   Or double-click `run.bat`. Click **Run firmware** to build the built-in example; if it succeeds, the P1.0 LED should blink. The setup guide also covers junctions, optional acceleration, and troubleshooting.
 
-For a second exercise, open [button_toggle.c](examples/button_toggle.c), click **Run firmware**, and press S1: the red P1.0 LED toggles on each debounced press. These are polling examples, not interrupt demonstrations.
+## Feature status
 
-A host `gcc` on PATH, matching Python's architecture, is optional for native instruction batching; it is separate from TI's cross-compiler. If building or loading the native backend fails, the firmware runner uses the Python fallback. The status identifies the active mode.
+![Bar chart of 21 acceptance scenarios: four partial, seventeen unsupported, zero passing.](docs/images/feature-status.svg)
 
-## Scope and limitations
+The chart summarizes the [acceptance baseline](FEATURE_COVERAGE.md): **4 partial**, **17 unsupported**, and **0 passing** scenarios. Partial scenarios do not count as passing; these are scenario counts, not code coverage or test coverage. The proposed 80% target is not yet achieved.
 
-- This is not a complete MSP430X CPU. Unsupported instructions stop execution; some unsupported hardware register writes may instead be stored without hardware effects.
-- GPIO and button behavior are approximations updated in batches. Floating inputs default low unless a pull resistor or override is selected; electrical contention is not modeled.
-- Watchdog, clock control, interrupts, timers, serial, ADC, USB, low-power modes, and most peripherals are not simulated. Unmapped memory is RAM-like, not an enforced F5529 memory map. The multiplier supports immediate 16-bit unsigned word multiplication only.
-- The worker uses experimental cycle counts and an adjustable assumed MCLK, defaulting to 1,048,576 Hz. Wall-clock speed varies, and the GUI warns when it falls behind. Do not rely on timing, frequency, power, or hardware correctness.
-- The board illustration is schematic, not a precise hardware representation. See [feature coverage](FEATURE_COVERAGE.md) for details.
+### Important limitations
 
-## Architecture and development
+- The CPU is not a complete MSP430X implementation. Unsupported instructions stop execution; some unsupported hardware writes may instead be stored without hardware effects.
+- GPIO and buttons are approximated in batches. Floating inputs default low unless a pull resistor or override is selected; electrical contention is not modeled.
+- The physical device memory map, watchdog, clock control, interrupts, timers, serial, ADC, USB, low-power modes, and most peripherals are not implemented.
+- Cycle counts and adjustable MCLK pacing are experimental. The default assumed MCLK is 1,048,576 Hz; actual speed varies. Do not rely on timing, frequency, power, or hardware correctness.
 
-Example firmware lives in `examples/`; automated tests and their ELF/source fixtures live in `tests/`. Application modules, the host compatibility header, and the Windows launcher remain at the project root.
+See the [full feature table](FEATURE_COVERAGE.md) for the status of individual scenarios.
 
-The GUI compiles source into ELF, loads it into the CPU, and runs batches on a worker; GPIO state is synchronized with the board model. [Architecture](docs/ARCHITECTURE.md) contains a source-linked diagram and boundaries. [Contributing](CONTRIBUTING.md) describes the test and development workflow.
+## Under the hood
 
-From the project root, run the full suite with:
+The GUI compiles source into ELF, loads it into the CPU, and runs instruction batches on a worker while synchronizing GPIO state with the board model. The [architecture guide](docs/ARCHITECTURE.md) includes a source-linked diagram and describes the legacy host-C path.
+
+| Path | Purpose |
+| --- | --- |
+| `simulator_imgui.py`, `board_ui.py` | Workbench, firmware runner, and board drawing. |
+| `msp430_cpu.py`, `msp430_memory.py`, `msp430_multiplier.py` | Experimental CPU, memory dispatch, and partial multiplier. |
+| `cpu_batch.py`, `cpu_batch.c` | Optional native batching and Python fallback. |
+| `examples/`, `tests/` | Example firmware and automated tests with fixtures. |
+
+## Development and testing
+
+From the repository root, run:
 
 ```cmd
 python -m unittest discover -v
 ```
 
-The full suite requires the configured MSP430 toolchain and support files, a host `gcc`, the Python dependency, and a usable GUI display; some native-batch tests skip if the backend is unavailable. A smaller CPU-memory/peripheral check does not require compilers or a display:
+The full suite needs the configured MSP430 toolchain and support files, host `gcc`, the Python dependency, and a graphical desktop. Some native-batch tests skip when the backend is unavailable. For a smaller compiler- and GUI-independent check:
 
 ```cmd
 python -m unittest -v tests.test_memory tests.test_multiplier
 ```
 
-`python benchmark_cpu.py` is an optional local benchmark requiring the configured firmware toolchain and native backend; its measurements are machine-dependent and do not establish hardware timing accuracy.
-
-## Troubleshooting
-
-- **Compiler cannot start:** check the exact `%LOCALAPPDATA%` paths above, junction targets, and that the Windows compiler executable exists.
-- **Build fails:** inspect **Build output**, verify the device support headers and linker files, and check your C source.
-- **CPU stops:** the firmware may use an unimplemented instruction or peripheral operation; consult the build output and [coverage](FEATURE_COVERAGE.md).
-- **Slow execution / Python fallback:** check host `gcc` and matching architecture; even native batching does not guarantee real-time operation.
-- **GUI fails to start:** verify Tkinter and `imgui-bundle` are installed for the Python interpreter being used and that a graphical session is available.
+`python benchmark_cpu.py` optionally compares execution modes and blink intervals; it requires the firmware toolchain and native backend. Results are machine-dependent and do not establish hardware timing accuracy. See [contributing](CONTRIBUTING.md) and [setup](docs/SETUP.md) for details.
 
 ## References and license
 
 The implementation refers to TI's MSP430x5xx/x6xx family guide (SLAU208Q), MSP430F5529 device datasheet (SLAS590P), and TI MSP430 GCC device support files. Local reference copies and downloaded toolchains are ignored by Git and are not distributed here.
 
-This project is **source-available**, not open source under the Open Source Definition: the custom [license](LICENSE) permits noncommercial use and requires source code to be provided to recipients of modified versions. Commercial use requires prior permission from the relevant copyright holders. Third-party components retain their own terms. See the full license for details.
+This project is **source-available**, not open source under the Open Source Definition. Its custom [license](LICENSE) permits noncommercial use and requires source code to be provided to recipients of modified versions; commercial use requires prior permission from the relevant copyright holders. Third-party components retain their own terms.

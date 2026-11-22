@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="840" height="270" viewBox="0 0 840 270" role="img" aria-labelledby="title desc">
+  <title id="title">Firmware acceptance scenario status</title>
+  <desc id="desc">Of 21 scenarios, four are partial, seventeen are unsupported, and none are passing. These are scenario counts, not test coverage.</desc>
+  <rect width="840" height="270" rx="16" fill="#101b2c"/>
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <text x="32" y="46" fill="#f2f6fb" font-size="23" font-weight="700">Firmware acceptance scenario status</text>
+    <text x="32" y="73" fill="#b9c9da" font-size="14">21 planned scenarios · counts, not code or test coverage</text>
+    <text x="32" y="118" fill="#e7eff8" font-size="16">Partial</text>
+    <rect x="178" y="99" width="500" height="23" rx="5" fill="#29374b"/>
+    <rect x="178" y="99" width="95" height="23" rx="5" fill="#e6ad4d"/>
+    <text x="694" y="117" fill="#e7eff8" font-size="16">4 / 21</text>
+    <text x="32" y="161" fill="#e7eff8" font-size="16">Unsupported</text>
+    <rect x="178" y="142" width="500" height="23" rx="5" fill="#29374b"/>
+    <rect x="178" y="142" width="405" height="23" rx="5" fill="#d36c71"/>
+    <text x="694" y="160" fill="#e7eff8" font-size="16">17 / 21</text>
+    <text x="32" y="204" fill="#e7eff8" font-size="16">Passing</text>
+    <rect x="178" y="185" width="500" height="23" rx="5" fill="#29374b"/>
+    <text x="694" y="203" fill="#e7eff8" font-size="16">0 / 21</text>
+    <text x="32" y="247" fill="#b9c9da" font-size="13">Partial scenarios do not count as passing; see FEATURE_COVERAGE.md.</text>
+  </g>
+</svg>
