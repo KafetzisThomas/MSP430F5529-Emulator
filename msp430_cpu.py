@@ -1,7 +1,7 @@
 """Experimental classic MSP430 instruction subset; not a full CPUX emulator."""
 import struct
 from msp430_memory import Memory
-from msp430_multiplier import UnsignedMultiplier16
+from msp430_multiplier import Multiplier16
 
 
 class UnsupportedInstruction(Exception):
@@ -13,7 +13,7 @@ class CPU:
         if elf[:6] != b'\x7fELF\x01\x01':
             raise ValueError('Expected little-endian ELF32 firmware')
         self.memory = Memory()
-        self.multiplier = UnsignedMultiplier16()
+        self.multiplier = Multiplier16()
         self.memory.map_region(0x04c0, 0x04cf, self.multiplier)
         # Compatibility view for firmware loading and existing inspection tools.
         # CPU instruction accesses must use the memory interface instead.
